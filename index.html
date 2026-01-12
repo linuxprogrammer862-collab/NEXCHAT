@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEX-REELS - Your Viral Video Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <div class="navbar-logo">
+                <i class="fas fa-play-circle"></i>
+                <span>NEX-REELS</span>
+            </div>
+            <div class="navbar-search">
+                <input type="text" id="searchInput" placeholder="Search videos...">
+                <button id="searchBtn"><i class="fas fa-search"></i></button>
+            </div>
+            <div class="navbar-menu">
+                <a href="#" class="nav-link" id="homeLink"><i class="fas fa-home"></i> Home</a>
+                <a href="#" class="nav-link" id="exploreLink"><i class="fas fa-fire"></i> Explore</a>
+                <a href="#" class="nav-link" id="uploadLink"><i class="fas fa-plus-circle"></i> Create</a>
+                <a href="#" class="nav-link" id="profileLink"><i class="fas fa-user"></i> Profile</a>
+                <button id="authBtn" class="auth-btn">Login</button>
+            </div>
+            <div class="mobile-menu-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Side Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-menu">
+            <a href="#" class="sidebar-link active" data-page="home">
+                <i class="fas fa-home"></i>
+                <span>For You</span>
+            </a>
+            <a href="#" class="sidebar-link" data-page="following">
+                <i class="fas fa-user-friends"></i>
+                <span>Following</span>
+            </a>
+            <a href="#" class="sidebar-link" data-page="explore">
+                <i class="fas fa-fire"></i>
+                <span>Explore</span>
+            </a>
+            <a href="#" class="sidebar-link" data-page="bookmarks">
+                <i class="fas fa-bookmark"></i>
+                <span>Bookmarks</span>
+            </a>
+            <a href="#" class="sidebar-link" data-page="notifications">
+                <i class="fas fa-bell"></i>
+                <span>Notifications</span>
+            </a>
+            <a href="#" class="sidebar-link" data-page="messages">
+                <i class="fas fa-comment"></i>
+                <span>Messages</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Auth Modal -->
+        <div id="authModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="authTabs" class="auth-tabs">
+                    <button class="tab-button active" data-tab="login">Login</button>
+                    <button class="tab-button" data-tab="signup">Sign Up</button>
+                </div>
+                
+                <!-- Login Tab -->
+                <div id="login" class="tab-content active">
+                    <h2>Login to NEX-REELS</h2>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="loginEmail">Email</label>
+                            <input type="email" id="loginEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <input type="password" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Login</button>
+                        <p class="form-link">New to NEX-REELS? <a href="#" class="switch-tab" data-tab="signup">Sign up</a></p>
+                    </form>
+                </div>
+
+                <!-- Sign Up Tab -->
+                <div id="signup" class="tab-content">
+                    <h2>Create NEX-REELS Account</h2>
+                    <form id="signupForm">
+                        <div class="form-group">
+                            <label for="signupUsername">Username</label>
+                            <input type="text" id="signupUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupEmail">Email</label>
+                            <input type="email" id="signupEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupPassword">Password</label>
+                            <input type="password" id="signupPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupPassword2">Confirm Password</label>
+                            <input type="password" id="signupPassword2" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Sign Up</button>
+                        <p class="form-link">Already have an account? <a href="#" class="switch-tab" data-tab="login">Log in</a></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Modal -->
+        <div id="uploadModal" class="modal">
+            <div class="modal-content upload-modal">
+                <span class="close">&times;</span>
+                <h2>Create a New Reel</h2>
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="videoTitle">Title</label>
+                        <input type="text" id="videoTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="videoDescription">Description</label>
+                        <textarea id="videoDescription" rows="4"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="videoTags">Tags (comma separated)</label>
+                        <input type="text" id="videoTags" placeholder="e.g., dance, comedy, music">
+                    </div>
+                    <div class="form-group">
+                        <label for="videoFile">Video File (MP4, MOV, etc.)</label>
+                        <input type="file" id="videoFile" accept="video/*" required>
+                        <div class="file-preview">
+                            <video id="videoPreview" style="max-width: 300px;"></video>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="videoThumbnail">Thumbnail (Optional)</label>
+                        <input type="file" id="videoThumbnail" accept="image/*">
+                        <img id="thumbnailPreview" style="max-width: 200px; display: none;">
+                    </div>
+                    <button type="submit" class="btn-primary">Upload Reel</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Video Feed Container -->
+        <div class="feed-container">
+            <!-- Home Page -->
+            <div id="homePage" class="page-content active">
+                <div class="feed">
+                    <div id="videoFeed" class="video-feed">
+                        <!-- Videos will be loaded here -->
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner"></i>
+                            <p>Loading videos...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Following Page -->
+            <div id="followingPage" class="page-content">
+                <div class="feed">
+                    <div id="followingFeed" class="video-feed">
+                        <div class="loading-spinner">
+                            <i class="fas fa-spinner"></i>
+                            <p>Loading videos from people you follow...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explore Page -->
+            <div id="explorePage" class="page-content">
+                <div class="explore-header">
+                    <h2>Explore</h2>
+                    <div class="filter-tags">
+                        <button class="filter-tag active" data-category="all">All</button>
+                        <button class="filter-tag" data-category="dance">Dance</button>
+                        <button class="filter-tag" data-category="comedy">Comedy</button>
+                        <button class="filter-tag" data-category="music">Music</button>
+                        <button class="filter-tag" data-category="sports">Sports</button>
+                        <button class="filter-tag" data-category="fashion">Fashion</button>
+                        <button class="filter-tag" data-category="food">Food</button>
+                        <button class="filter-tag" data-category="education">Education</button>
+                    </div>
+                </div>
+                <div class="explore-grid" id="exploreGrid">
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner"></i>
+                        <p>Loading explore content...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bookmarks Page -->
+            <div id="bookmarksPage" class="page-content">
+                <h2>Your Bookmarks</h2>
+                <div id="bookmarksList" class="bookmarks-list">
+                    <p class="empty-state">No bookmarked videos yet. Start bookmarking videos to save them!</p>
+                </div>
+            </div>
+
+            <!-- Notifications Page -->
+            <div id="notificationsPage" class="page-content">
+                <h2>Notifications</h2>
+                <div id="notificationsList" class="notifications-list">
+                    <p class="empty-state">No new notifications</p>
+                </div>
+            </div>
+
+            <!-- Messages Page -->
+            <div id="messagesPage" class="page-content">
+                <h2>Messages</h2>
+                <div class="messages-container">
+                    <div id="conversationsList" class="conversations-list"></div>
+                    <div id="chatArea" class="chat-area" style="display: none;">
+                        <div id="chatMessages" class="chat-messages"></div>
+                        <div class="message-input-group">
+                            <input type="text" id="messageInput" placeholder="Type a message...">
+                            <button id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Page -->
+            <div id="profilePage" class="page-content">
+                <div id="profileContent" style="display: none;">
+                    <!-- Profile content loaded dynamically -->
+                </div>
+                <div id="profilePlaceholder" class="empty-state">
+                    <p>Login to view your profile</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Comment Modal -->
+    <div id="commentModal" class="modal">
+        <div class="modal-content comment-modal">
+            <span class="close">&times;</span>
+            <div class="comment-section">
+                <h3>Comments</h3>
+                <div id="commentsList" class="comments-list">
+                    <!-- Comments loaded here -->
+                </div>
+                <div class="comment-input">
+                    <input type="text" id="commentInput" placeholder="Add a comment...">
+                    <button id="commentSubmitBtn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Scripts -->
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+    <script src="auth.js"></script>
+    <script src="videos.js"></script>
+    <script src="ui.js"></script>
+    <script src="interactions.js"></script>
+</body>
+</html>

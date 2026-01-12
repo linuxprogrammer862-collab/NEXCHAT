@@ -1,0 +1,38 @@
+{
+  "name": "nex-reels",
+  "version": "1.0.0",
+  "description": "A modern TikTok-like video sharing platform built with Firebase",
+  "main": "index.html",
+  "type": "module",
+  "scripts": {
+    "start": "http-server",
+    "dev": "http-server -c-1",
+    "build": "echo 'No build step needed for this project'",
+    "test": "echo 'Testing not configured'",
+    "serve": "python -m http.server 8000"
+  },
+  "keywords": [
+    "tiktok",
+    "video",
+    "social-media",
+    "firebase",
+    "streaming",
+    "javascript"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "dependencies": {
+    "firebase": "^9.23.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/nex-reels.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/nex-reels/issues"
+  },
+  "homepage": "https://github.com/yourusername/nex-reels#readme"
+}
