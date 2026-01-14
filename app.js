@@ -27,6 +27,22 @@ function initializeApp() {
     loadVideos();
 }
 
+// Helper to show loading spinner
+function showLoadingSpinner(containerId) {
+    const container = document.getElementById(containerId);
+    if (container) {
+        container.innerHTML = '<div class="loading-spinner"><i class="fas fa-spinner"></i><p>Loading...</p></div>';
+    }
+}
+
+// Helper to clear container
+function clearContainer(containerId) {
+    const container = document.getElementById(containerId);
+    if (container) {
+        container.innerHTML = '';
+    }
+}
+
 function setupEventListeners() {
     // Navbar
     document.getElementById('authBtn').addEventListener('click', openAuthModal);
@@ -257,43 +273,67 @@ function loadVideos() {
 }
 
 function loadHomeVideos() {
-    const feed = document.getElementById('videoFeed');
-    feed.innerHTML = '';
+    showLoadingSpinner('videoFeed');
     
-    appState.videos.forEach(video => {
-        feed.appendChild(createVideoCard(video));
-    });
+    // Simulate loading delay to show videos loading on mobile
+    setTimeout(() => {
+        clearContainer('videoFeed');
+        const feed = document.getElementById('videoFeed');
+        
+        if (appState.videos.length === 0) {
+            feed.innerHTML = '<div class="empty-state"><i class="fas fa-video"></i><p>No videos available. Start creating!</p></div>';
+            return;
+        }
+        
+        appState.videos.forEach(video => {
+            const card = createVideoCard(video);
+            feed.appendChild(card);
+        });
+    }, 500);
 }
 
 function loadFollowingVideos() {
-    const feed = document.getElementById('followingFeed');
-    feed.innerHTML = '';
+    showLoadingSpinner('followingFeed');
     
-    if (!appState.currentUser) {
-        feed.innerHTML = '<div class="empty-state"><i class="fas fa-heart"></i><p>Login to see videos from people you follow</p></div>';
-        return;
-    }
-    
-    // Filter videos from following users
-    const followingVids = appState.videos.filter(v => appState.userFollowing.includes(v.authorId));
-    
-    if (followingVids.length === 0) {
-        feed.innerHTML = '<div class="empty-state"><i class="fas fa-user-friends"></i><p>Start following creators to see their videos</p></div>';
-        return;
-    }
-    
-    followingVids.forEach(video => {
-        feed.appendChild(createVideoCard(video));
-    });
+    setTimeout(() => {
+        clearContainer('followingFeed');
+        const feed = document.getElementById('followingFeed');
+        
+        if (!appState.currentUser) {
+            feed.innerHTML = '<div class="empty-state"><i class="fas fa-heart"></i><p>Login to see videos from people you follow</p></div>';
+            return;
+        }
+        
+        // Filter videos from following users
+        const followingVids = appState.videos.filter(v => appState.userFollowing.includes(v.authorId));
+        
+        if (followingVids.length === 0) {
+            feed.innerHTML = '<div class="empty-state"><i class="fas fa-user-friends"></i><p>Start following creators to see their videos</p></div>';
+            return;
+        }
+        
+        followingVids.forEach(video => {
+            feed.appendChild(createVideoCard(video));
+        });
+    }, 500);
 }
 
 function loadExploreVideos() {
-    const grid = document.getElementById('exploreGrid');
-    grid.innerHTML = '';
+    showLoadingSpinner('exploreGrid');
     
-    appState.videos.forEach(video => {
-        grid.appendChild(createVideoCard(video));
-    });
+    setTimeout(() => {
+        clearContainer('exploreGrid');
+        const grid = document.getElementById('exploreGrid');
+        
+        if (appState.videos.length === 0) {
+            grid.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i><p>No videos to explore yet</p></div>';
+            return;
+        }
+        
+        appState.videos.forEach(video => {
+            grid.appendChild(createVideoCard(video));
+        });
+    }, 500);
 }
 
 function loadBookmarks() {
