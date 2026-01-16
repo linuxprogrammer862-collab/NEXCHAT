@@ -1,6 +1,7 @@
 // interactions.js - User Interactions and Real-time Features
-import { appState, showToast } from './app.js';
-import { addComment, getComments } from './videos.js';
+import { addComment } from './videos.js';
+
+// Access appState and showToast from window (set in app.js)
 
 // Initialize all interaction handlers
 document.addEventListener('DOMContentLoaded', () => {
@@ -32,11 +33,11 @@ function setupCommentHandling() {
         submitBtn.addEventListener('click', async () => {
             const text = commentInput.value.trim();
             if (!text) {
-                showToast('Comment cannot be empty', 'error');
+                window.showToast('Comment cannot be empty', 'error');
                 return;
             }
             
-            const success = await addComment(appState.currentVideoId, text);
+            const success = await addComment(window.appState.currentVideoId, text);
             if (success) {
                 commentInput.value = '';
                 // Reload comments

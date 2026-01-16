@@ -2,7 +2,7 @@
 import { auth, db } from './firebase-config.js';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { appState, openAuthModal, showToast } from './app.js';
+import { appState, openAuthModal, showToast, navigateToPage } from './app.js';
 
 // Check authentication state
 onAuthStateChanged(auth, async (user) => {
@@ -57,7 +57,12 @@ async function handleLogin(e) {
         await signInWithEmailAndPassword(auth, email, password);
         closeAuthModal();
         document.getElementById('loginForm').reset();
-        showToast('Login successful!', 'success');
+        showToast('Login successful! 🎉', 'success');
+        
+        // Redirect to profile page after 1 second
+        setTimeout(() => {
+            navigateToPage('profile');
+        }, 1000);
     } catch (error) {
         console.error('Login error:', error);
         showToast(error.message, 'error');
@@ -107,7 +112,12 @@ async function handleSignup(e) {
         
         closeAuthModal();
         document.getElementById('signupForm').reset();
-        showToast('Account created successfully!', 'success');
+        showToast('Account created successfully! 🎉', 'success');
+        
+        // Redirect to profile page after 1 second
+        setTimeout(() => {
+            navigateToPage('profile');
+        }, 1000);
     } catch (error) {
         console.error('Signup error:', error);
         showToast(error.message, 'error');

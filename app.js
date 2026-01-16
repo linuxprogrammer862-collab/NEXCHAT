@@ -1,5 +1,32 @@
 // app.js - Main Application Logic
 import { auth, db, storage } from './firebase-config.js';
+import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import './auth.js';
+import './videos.js';
+import './ui.js';
+import './interactions.js';
+
+const isAndroid = /Android/.test(navigator.userAgent);
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+const isMobile = isAndroid || isIOS;
+
+// Fix for Android keyboard issues
+if (isAndroid) {
+    console.log('🤖 Android detected - applying fixes');
+    // Prevent default Android behaviors
+    document.addEventListener('touchmove', function(e) {
+        if (e.target.closest('input, textarea, select')) return; // Allow scrolling in form inputs
+    }, { passive: true });
+    
+    // Fix viewport height on Android
+    function setAndroidHeight() {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    setAndroidHeight();
+    window.addEventListener('orientationchange', setAndroidHeight);
+    window.addEventListener('resize', setAndroidHeight);
+}
 
 // Global state
 const appState = {
@@ -16,10 +43,10 @@ const appState = {
     isPlayerOpen: false
 };
 
-// Initialize app
-document.addEventListener('DOMContentLoaded', () => {
-    initializeApp();
-});
+// Expose appState globally for other modules
+window.appState = appState;
+window.isAndroid = isAndroid;
+window.isMobile = isMobile;
 
 function initializeApp() {
     setupEventListeners();
@@ -27,7 +54,8 @@ function initializeApp() {
     loadVideos();
 }
 
-// Helper to show loading spinner
+function checkAuthState() {
+
 function showLoadingSpinner(containerId) {
     const container = document.getElementById(containerId);
     if (container) {
@@ -35,7 +63,6 @@ function showLoadingSpinner(containerId) {
     }
 }
 
-// Helper to clear container
 function clearContainer(containerId) {
     const container = document.getElementById(containerId);
     if (container) {
@@ -44,43 +71,23 @@ function clearContainer(containerId) {
 }
 
 function setupEventListeners() {
-    // Navbar
-    document.getElementById('authBtn').addEventListener('click', openAuthModal);
-    document.getElementById('homeLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        navigateToPage('home');
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const page = btn.dataset.page;
+            if (page) {
+                navigateToPage(page);
+                updateBottomNavActive(btn);
+            }
+        });
     });
-    document.getElementById('exploreLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        navigateToPage('explore');
-    });
-    document.getElementById('uploadLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        openUploadModal();
-    });
-    document.getElementById('profileLink').addEventListener('click', (e) => {
-        e.preventDefault();
-        navigateToPage('profile');
-    });
+
+    // Upload button (mobile)
+    document.getElementById('uploadBtnMobile').addEventListener('click', openUploadModal);
 
     // Search
     document.getElementById('searchBtn').addEventListener('click', searchVideos);
     document.getElementById('searchInput').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') searchVideos();
-    });
-
-    // Mobile menu
-    document.querySelector('.mobile-menu-toggle').addEventListener('click', toggleMobileMenu);
-
-    // Sidebar
-    document.querySelectorAll('.sidebar-link').forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            const page = link.dataset.page;
-            navigateToPage(page);
-            updateSidebarActive(link);
-            closeMobileMenu();
-        });
     });
 
     // Modal closes
@@ -106,6 +113,9 @@ function setupEventListeners() {
     document.getElementById('uploadForm').addEventListener('submit', handleUploadVideo);
     document.getElementById('videoFile').addEventListener('change', previewVideo);
     document.getElementById('videoThumbnail').addEventListener('change', previewThumbnail);
+
+    // Report form
+    document.getElementById('reportForm').addEventListener('submit', handleReport);
 
     // Explore filters
     document.querySelectorAll('.filter-tag').forEach(tag => {
@@ -151,6 +161,9 @@ function navigateToPage(page) {
             case 'bookmarks':
                 loadBookmarks();
                 break;
+            case 'stats':
+                loadStats();
+                break;
             case 'notifications':
                 loadNotifications();
                 break;
@@ -164,19 +177,9 @@ function navigateToPage(page) {
     }
 }
 
-function updateSidebarActive(link) {
-    document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
-    link.classList.add('active');
-}
-
-function toggleMobileMenu() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.toggle('active');
-}
-
-function closeMobileMenu() {
-    const sidebar = document.querySelector('.sidebar');
-    sidebar.classList.remove('active');
+function updateBottomNavActive(btn) {
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
 }
 
 // Modal functions
@@ -202,6 +205,18 @@ function openCommentModal(videoId) {
     loadComments(videoId);
 }
 
+function openReportModal(video) {
+    appState.currentVideoId = video.id;
+    appState.currentVideoData = video;
+    const modal = document.getElementById('reportModal');
+    modal.classList.add('show');
+    
+    // Reset form
+    document.getElementById('reportForm').reset();
+    document.getElementById('reportSuccessMessage').style.display = 'none';
+    document.getElementById('reportForm').style.display = 'block';
+}
+
 function closeModal(modal) {
     modal.classList.remove('show');
 }
@@ -214,10 +229,7 @@ function switchAuthTab(tab) {
     document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
 }
 
-// Video loading functions
 function loadVideos() {
-    // Simulating video data - In production, fetch from Firestore
-    appState.videos = [
         {
             id: '1',
             title: 'Amazing Dance Moves',
@@ -274,9 +286,6 @@ function loadVideos() {
 
 function loadHomeVideos() {
     showLoadingSpinner('videoFeed');
-    
-    // Simulate loading delay to show videos loading on mobile
-    setTimeout(() => {
         clearContainer('videoFeed');
         const feed = document.getElementById('videoFeed');
         
@@ -354,6 +363,58 @@ function loadBookmarks() {
     
     bookmarked.forEach(video => {
         list.appendChild(createVideoCard(video));
+    });
+}
+
+function loadStats() {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    const videosThisWeek = appState.videos.filter(v => {
+        const vidDate = v.timestamp instanceof Date ? v.timestamp : new Date(v.timestamp);
+        return vidDate > weekAgo;
+    });
+    
+    const creators = new Set(appState.videos.map(v => v.authorId)).size;
+    const totalLikes = appState.videos.reduce((sum, v) => sum + (v.likes || 0), 0);
+    
+    document.getElementById('totalVideosStat').textContent = appState.videos.length;
+    document.getElementById('videosThisWeekStat').textContent = videosThisWeek.length;
+    document.getElementById('activeCreatorsStat').textContent = creators;
+    document.getElementById('totalLikesStat').textContent = totalLikes.toLocaleString();
+    
+    const recentList = document.getElementById('recentUploadsList');
+    recentList.innerHTML = '';
+    
+    const recentVideos = [...appState.videos].sort((a, b) => {
+        const timeA = a.timestamp instanceof Date ? a.timestamp : new Date(a.timestamp);
+        const timeB = b.timestamp instanceof Date ? b.timestamp : new Date(b.timestamp);
+        return timeB - timeA;
+    }).slice(0, 10);
+    
+    if (recentVideos.length === 0) {
+        recentList.innerHTML = '<p class="empty-state">No videos yet</p>';
+        return;
+    }
+    
+    recentVideos.forEach(video => {
+        const timeAgo = formatTime(video.timestamp instanceof Date ? video.timestamp : new Date(video.timestamp));
+        const item = document.createElement('div');
+        item.className = 'upload-item';
+        item.innerHTML = `
+            <img src="${video.thumbnail}" alt="${video.title}" class="upload-thumbnail">
+            <div class="upload-info">
+                <div class="upload-title">${video.title}</div>
+                <div class="upload-meta">by @${video.author}</div>
+                <div class="upload-stats">
+                    <span>❤️ ${(video.likes || 0).toLocaleString()}</span>
+                    <span>💬 ${(video.comments || 0).toLocaleString()}</span>
+                    <span>👁️ ${(video.views || 0).toLocaleString()}</span>
+                    <span>${timeAgo}</span>
+                </div>
+            </div>
+        `;
+        recentList.appendChild(item);
     });
 }
 
@@ -583,6 +644,12 @@ function openVideoPlayer(video) {
                         <i class="fas ${video.bookmarked ? 'fas-solid' : 'far'} fa-bookmark"></i>
                     </button>
                 </div>
+
+                <div>
+                    <button class="control-button report-btn" id="reportBtn">
+                        <i class="fas fa-flag"></i>
+                    </button>
+                </div>
             </div>
         </div>
     `;
@@ -607,6 +674,12 @@ function openVideoPlayer(video) {
     
     const bookmarkBtn = player.querySelector('#bookmarkBtn');
     bookmarkBtn.addEventListener('click', () => toggleBookmark(video, bookmarkBtn));
+
+    const reportBtn = player.querySelector('#reportBtn');
+    reportBtn.addEventListener('click', () => {
+        closeVideoPlayer();
+        openReportModal(video);
+    });
 }
 
 function closeVideoPlayer() {
@@ -792,5 +865,64 @@ function formatTime(date) {
     return 'just now';
 }
 
+async function handleReport(e) {
+    e.preventDefault();
+
+    if (!appState.currentVideoData) {
+        showToast('No video selected', 'error');
+        return;
+    }
+
+    try {
+        const reason = document.getElementById('reportReason').value;
+        const description = document.getElementById('reportDescription').value;
+        const isAnonymous = document.getElementById('reportAnonymous').checked;
+
+        if (!reason) {
+            showToast('Please select a reason', 'error');
+            return;
+        }
+
+        // Save report to Firestore
+        await addDoc(collection(db, 'reports'), {
+            videoId: appState.currentVideoData.id,
+            videoTitle: appState.currentVideoData.title,
+            authorId: appState.currentVideoData.authorId,
+            author: appState.currentVideoData.author,
+            reason: reason,
+            description: description,
+            reportedBy: isAnonymous ? 'Anonymous' : (appState.currentUser?.uid || 'Unknown'),
+            reportedByEmail: isAnonymous ? null : (appState.currentUser?.email || null),
+            isAnonymous: isAnonymous,
+            status: 'pending',
+            createdAt: new Date(),
+            flagged: false,
+            deleted: false
+        });
+
+        // Show success message
+        document.getElementById('reportForm').style.display = 'none';
+        document.getElementById('reportSuccessMessage').style.display = 'block';
+
+        showToast('Report submitted successfully! Thank you.', 'success');
+
+        // Close modal after 2 seconds
+        setTimeout(() => {
+            document.getElementById('reportModal').classList.remove('show');
+        }, 2000);
+
+    } catch (error) {
+        console.error('Error submitting report:', error);
+        showToast('Error submitting report: ' + error.message, 'error');
+    }
+}
+
 // Exports for other modules
-export { appState, openAuthModal, openUploadModal, openCommentModal, closeModal, showToast };
+export { appState, openAuthModal, openUploadModal, openCommentModal, closeModal, showToast, navigateToPage };
+
+// Also expose critical functions globally
+window.showToast = showToast;
+window.navigateToPage = navigateToPage;
+window.openAuthModal = openAuthModal;
+window.openUploadModal = openUploadModal;
+window.openReportModal = openReportModal;

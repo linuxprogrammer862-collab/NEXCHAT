@@ -2,13 +2,14 @@
 import { db, storage } from './firebase-config.js';
 import { collection, addDoc, doc, updateDoc, deleteDoc, getDocs, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
-import { appState, showToast } from './app.js';
+
+// Access appState and showToast from window (set in app.js)
 
 async function handleUploadVideo(e) {
     e.preventDefault();
     
-    if (!appState.currentUser) {
-        showToast('Please login to upload videos', 'error');
+    if (!window.appState.currentUser) {
+        window.showToast('Please login to upload videos', 'error');
         return;
     }
     
@@ -37,7 +38,7 @@ async function handleUploadVideo(e) {
         // Upload thumbnail if provided
         let thumbnailUrl = 'https://via.placeholder.com/300x500?text=' + encodeURIComponent(title);
         if (thumbnailFile) {
-            const thumbRef = ref(storage, `thumbnails/${appState.currentUser.uid}/${Date.now()}`);
+            const thumbRef = ref(storage, `thumbnails/${window.appState.currentUser.uid}/${Date.now()}`);
             const thumbSnapshot = await uploadBytes(thumbRef, thumbnailFile);
             thumbnailUrl = await getDownloadURL(thumbSnapshot.ref);
         }
@@ -47,8 +48,8 @@ async function handleUploadVideo(e) {
             title: title,
             description: description,
             tags: tags,
-            author: appState.currentUser.displayName || 'Anonymous',
-            authorId: appState.currentUser.uid,
+            author: window.appState.currentUser.displayName || 'Anonymous',
+            authorId: window.appState.currentUser.uid,
             videoUrl: videoUrl,
             thumbnailUrl: thumbnailUrl,
             duration: 0,
@@ -64,12 +65,12 @@ async function handleUploadVideo(e) {
         });
         
         // Add to local app state
-        appState.videos.unshift({
+        window.appState.videos.unshift({
             id: videoDoc.id,
             title: title,
             description: description,
-            author: appState.currentUser.displayName || 'Anonymous',
-            authorId: appState.currentUser.uid,
+            author: window.appState.currentUser.displayName || 'Anonymous',
+            authorId: window.appState.currentUser.uid,
             url: videoUrl,
             thumbnail: thumbnailUrl,
             duration: 0,
@@ -91,11 +92,11 @@ async function handleUploadVideo(e) {
         submitBtn.textContent = 'Upload Reel';
         
         document.getElementById('uploadModal').classList.remove('show');
-        showToast('Video uploaded successfully! 🎉', 'success');
+        window.showToast('Video uploaded successfully! 🎉', 'success');
         
     } catch (error) {
         console.error('Upload error:', error);
-        showToast('Error uploading video: ' + error.message, 'error');
+        window.showToast('Error uploading video: ' + error.message, 'error');
         
         const submitBtn = document.querySelector('#uploadForm button[type="submit"]');
         submitBtn.disabled = false;
@@ -125,8 +126,8 @@ async function loadAllVideos() {
 }
 
 async function likeVideo(videoId) {
-    if (!appState.currentUser) {
-        showToast('Please login to like videos', 'error');
+    if (!window.appState.currentUser) {
+        window.showToast('Please login to like videos', 'error');
         return;
     }
     
@@ -137,7 +138,7 @@ async function likeVideo(videoId) {
         if (videoDoc.exists()) {
             const data = videoDoc.data();
             const likedBy = data.likedBy || [];
-            const userId = appState.currentUser.uid;
+            const userId = window.appState.currentUser.uid;
             
             if (likedBy.includes(userId)) {
                 // Unlike
@@ -155,13 +156,13 @@ async function likeVideo(videoId) {
         }
     } catch (error) {
         console.error('Error liking video:', error);
-        showToast('Error updating like', 'error');
+        window.showToast('Error updating like', 'error');
     }
 }
 
 async function bookmarkVideo(videoId) {
-    if (!appState.currentUser) {
-        showToast('Please login to bookmark videos', 'error');
+    if (!window.appState.currentUser) {
+        window.showToast('Please login to bookmark videos', 'error');
         return;
     }
     
@@ -172,7 +173,7 @@ async function bookmarkVideo(videoId) {
         if (videoDoc.exists()) {
             const data = videoDoc.data();
             const bookmarkedBy = data.bookmarkedBy || [];
-            const userId = appState.currentUser.uid;
+            const userId = window.appState.currentUser.uid;
             
             if (bookmarkedBy.includes(userId)) {
                 // Remove bookmark
@@ -188,42 +189,42 @@ async function bookmarkVideo(videoId) {
         }
     } catch (error) {
         console.error('Error bookmarking video:', error);
-        showToast('Error updating bookmark', 'error');
+        window.showToast('Error updating bookmark', 'error');
     }
 }
 
 async function deleteVideo(videoId) {
-    if (!appState.currentUser) {
-        showToast('Please login', 'error');
+    if (!window.appState.currentUser) {
+        window.showToast('Please login', 'error');
         return;
     }
     
     try {
         await deleteDoc(doc(db, 'videos', videoId));
-        appState.videos = appState.videos.filter(v => v.id !== videoId);
-        showToast('Video deleted', 'success');
+        window.appState.videos = window.appState.videos.filter(v => v.id !== videoId);
+        window.showToast('Video deleted', 'success');
     } catch (error) {
         console.error('Error deleting video:', error);
-        showToast('Error deleting video', 'error');
+        window.showToast('Error deleting video', 'error');
     }
 }
 
 async function addComment(videoId, commentText) {
-    if (!appState.currentUser) {
-        showToast('Please login to comment', 'error');
+    if (!window.appState.currentUser) {
+        window.showToast('Please login to comment', 'error');
         return;
     }
     
     if (!commentText.trim()) {
-        showToast('Comment cannot be empty', 'error');
+        window.showToast('Comment cannot be empty', 'error');
         return;
     }
     
     try {
         const commentsRef = collection(db, 'videos', videoId, 'comments');
         await addDoc(commentsRef, {
-            author: appState.currentUser.displayName || 'Anonymous',
-            authorId: appState.currentUser.uid,
+            author: window.appState.currentUser.displayName || 'Anonymous',
+            authorId: window.appState.currentUser.uid,
             text: commentText,
             createdAt: new Date(),
             likes: 0
@@ -242,7 +243,7 @@ async function addComment(videoId, commentText) {
         return true;
     } catch (error) {
         console.error('Error adding comment:', error);
-        showToast('Error adding comment', 'error');
+        window.showToast('Error adding comment', 'error');
         return false;
     }
 }
@@ -269,13 +270,13 @@ async function getComments(videoId) {
 }
 
 async function followUser(userId) {
-    if (!appState.currentUser) {
-        showToast('Please login to follow users', 'error');
+    if (!window.appState.currentUser) {
+        window.showToast('Please login to follow users', 'error');
         return;
     }
     
     try {
-        const userRef = doc(db, 'users', appState.currentUser.uid);
+        const userRef = doc(db, 'users', window.appState.currentUser.uid);
         const userDoc = await getDoc(userRef);
         
         if (userDoc.exists()) {
@@ -287,23 +288,22 @@ async function followUser(userId) {
                     following: following
                 });
                 
-                appState.userFollowing = following;
-                showToast('Following!', 'success');
+                window.appState.userFollowing = following;
+                window.showToast('Following!', 'success');
             }
         }
     } catch (error) {
         console.error('Error following user:', error);
-        showToast('Error following user', 'error');
+        window.showToast('Error following user', 'error');
     }
 }
-
 async function unfollowUser(userId) {
-    if (!appState.currentUser) {
+    if (!window.appState.currentUser) {
         return;
     }
     
     try {
-        const userRef = doc(db, 'users', appState.currentUser.uid);
+        const userRef = doc(db, 'users', window.appState.currentUser.uid);
         const userDoc = await getDoc(userRef);
         
         if (userDoc.exists()) {
@@ -314,12 +314,12 @@ async function unfollowUser(userId) {
                 following: filtered
             });
             
-            appState.userFollowing = filtered;
-            showToast('Unfollowed', 'success');
+            window.appState.userFollowing = filtered;
+            window.showToast('Unfollowed', 'success');
         }
     } catch (error) {
         console.error('Error unfollowing user:', error);
-        showToast('Error unfollowing user', 'error');
+        window.showToast('Error unfollowing user', 'error');
     }
 }
 

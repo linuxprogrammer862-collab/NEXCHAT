@@ -1,5 +1,5 @@
 // ui.js - UI Enhancement and Interactive Elements
-import { appState } from './app.js';
+// Access appState from window object (set in app.js)
 
 // Initialize UI enhancements when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
