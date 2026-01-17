@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1db854">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="x-apple-disable-message-reformatting" content="yes">
+    <title>NEX-REELS - Your Viral Video Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Android Fix - Prevent scrolling issues */
+        html, body {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        input, textarea, select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        
+        /* Fix for Android keyboard overlay */
+        @media (max-width: 768px) {
+            body {
+                position: fixed;
+                width: 100%;
+                height: 100vh;
+                overflow: hidden;
+            }
+            
+            .main-content {
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Android Top Header -->
+    <header class="android-header">
+        <div class="header-content">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button onclick="window.location.href='../NEXCHAT/chat.html'" style="background: none; border: none; font-size: 20px; cursor: pointer; padding: 5px 10px;">← NEXCHAT</button>
+                <h1>NEX-REELS</h1>
+            </div>
+            <div class="header-search-mobile">
+                <input type="text" id="searchInput" placeholder="Search...">
+                <button id="searchBtn"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- Auth Modal -->
+        <div id="authModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <div id="authTabs" class="auth-tabs">
+                    <button class="tab-button active" data-tab="login">Login</button>
+                    <button class="tab-button" data-tab="signup">Sign Up</button>
+                </div>
+                
+                <!-- Login Tab -->
+                <div id="login" class="tab-content active">
+                    <h2>Login to NEX-REELS</h2>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="loginEmail">Email</label>
+                            <input type="email" id="loginEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <input type="password" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Login</button>
+                        <p class="form-link">New to NEX-REELS? <a href="#" class="switch-tab" data-tab="signup">Sign up</a></p>
+                    </form>
+                </div>
+
+                <!-- Sign Up Tab -->
+                <div id="signup" class="tab-content">
+                    <h2>Create NEX-REELS Account</h2>
+                    <form id="signupForm">
+                        <div class="form-group">
+                            <label for="signupUsername">Username</label>
+                            <input type="text" id="signupUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupEmail">Email</label>
+                            <input type="email" id="signupEmail" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupPassword">Password</label>
+                            <input type="password" id="signupPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="signupPassword2">Confirm Password</label>
+                            <input type="password" id="signupPassword2" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Sign Up</button>
+                        <p class="form-link">Already have an account? <a href="#" class="switch-tab" data-tab="login">Log in</a></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Modal -->
+        <div id="uploadModal" class="modal">
+            <div class="modal-content upload-modal">
+                <span class="close">&times;</span>
+                <h2>Create a New Reel</h2>
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="videoTitle">Title</label>
+                        <input type="text" id="videoTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="videoDescription">Description</label>
+                        <textarea id="videoDescription" rows="4"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="videoTags">Tags (comma separated)</label>
+                        <input type="text" id="videoTags" placeholder="e.g., dance, comedy, music">
+                    </div>
+                    <div class="form-group">
+                        <label for="videoFile">Video File (MP4, MOV, etc.)</label>
+                        <input type="file" id="videoFile" accept="video/*" required>
+                        <div class="file-preview">
+                            <video id="videoPreview" style="max-width: 300px;"></video>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="videoThumbnail">Thumbnail (Optional)</label>
+                        <input type="file" id="videoThumbnail" accept="image/*">
+                        <img id="thumbnailPreview" style="max-width: 200px; display: none;">
+                    </div>
+                    <button type="submit" class="btn-primary">Upload Reel</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Video Feed Container -->
+        <div class="feed-container">
+            <!-- Home Page -->
+            <div id="homePage" class="page-content active">
+                <div class="feed">
+                    <div id="videoFeed" class="video-feed">
+                        <!-- Videos will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Following Page -->
+            <div id="followingPage" class="page-content">
+                <div class="feed">
+                    <div id="followingFeed" class="video-feed">
+                        <!-- Videos will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explore Page -->
+            <div id="explorePage" class="page-content">
+                <div class="explore-header">
+                    <h2>Explore</h2>
+                    <div class="filter-tags">
+                        <button class="filter-tag active" data-category="all">All</button>
+                        <button class="filter-tag" data-category="dance">Dance</button>
+                        <button class="filter-tag" data-category="comedy">Comedy</button>
+                        <button class="filter-tag" data-category="music">Music</button>
+                        <button class="filter-tag" data-category="sports">Sports</button>
+                        <button class="filter-tag" data-category="fashion">Fashion</button>
+                        <button class="filter-tag" data-category="food">Food</button>
+                        <button class="filter-tag" data-category="education">Education</button>
+                    </div>
+                </div>
+                <div class="explore-grid" id="exploreGrid">
+                    <!-- Videos will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Bookmarks Page -->
+            <div id="bookmarksPage" class="page-content">
+                <h2>Your Bookmarks</h2>
+                <div id="bookmarksList" class="bookmarks-list">
+                    <p class="empty-state">No bookmarked videos yet. Start bookmarking videos to save them!</p>
+                </div>
+            </div>
+
+            <!-- Stats Page -->
+            <div id="statsPage" class="page-content">
+                <h2>📊 NEX-REELS Stats</h2>
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-icon">🎬</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Total Videos</div>
+                            <div class="stat-value" id="totalVideosStat">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📈</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Videos This Week</div>
+                            <div class="stat-value" id="videosThisWeekStat">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Active Creators</div>
+                            <div class="stat-value" id="activeCreatorsStat">0</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">❤️</div>
+                        <div class="stat-content">
+                            <div class="stat-label">Total Likes</div>
+                            <div class="stat-value" id="totalLikesStat">0</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="videoUploadsList" class="videos-list-stat">
+                    <h3>📹 Recent Uploads</h3>
+                    <div id="recentUploadsList" class="recent-uploads">
+                        <p class="empty-state">Loading videos...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Page -->
+            <div id="notificationsPage" class="page-content">
+                <h2>Notifications</h2>
+                <div id="notificationsList" class="notifications-list">
+                    <p class="empty-state">No new notifications</p>
+                </div>
+            </div>
+
+            <!-- Messages Page -->
+            <div id="messagesPage" class="page-content">
+                <h2>Messages</h2>
+                <div class="messages-container">
+                    <div id="conversationsList" class="conversations-list"></div>
+                    <div id="chatArea" class="chat-area" style="display: none;">
+                        <div id="chatMessages" class="chat-messages"></div>
+                        <div class="message-input-group">
+                            <input type="text" id="messageInput" placeholder="Type a message...">
+                            <button id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Page -->
+            <div id="profilePage" class="page-content">
+                <div id="profileContent" style="display: none;">
+                    <!-- Profile content loaded dynamically -->
+                </div>
+                <div id="profilePlaceholder" class="empty-state">
+                    <p>Login to view your profile</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Android Bottom Navigation -->
+    <nav class="android-bottom-nav">
+        <button class="nav-item active" data-page="home">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </button>
+        <button class="nav-item" data-page="explore">
+            <i class="fas fa-fire"></i>
+            <span>Explore</span>
+        </button>
+        <button class="nav-item" id="uploadBtnMobile">
+            <i class="fas fa-plus-circle"></i>
+            <span>Create</span>
+        </button>
+        <button class="nav-item" data-page="stats">
+            <i class="fas fa-chart-bar"></i>
+            <span>Stats</span>
+        </button>
+        <button class="nav-item" data-page="profile">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </button>
+    </nav>
+
+    <!-- Comment Modal -->
+    <div id="commentModal" class="modal">
+        <div class="modal-content comment-modal">
+            <span class="close">&times;</span>
+            <div class="comment-section">
+                <h3>Comments</h3>
+                <div id="commentsList" class="comments-list">
+                    <!-- Comments loaded here -->
+                </div>
+                <div class="comment-input">
+                    <input type="text" id="commentInput" placeholder="Add a comment...">
+                    <button id="commentSubmitBtn"><i class="fas fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content report-modal">
+            <span class="close">&times;</span>
+            <h3>Report Video</h3>
+            <form id="reportForm">
+                <div class="form-group">
+                    <label for="reportReason">Why are you reporting this video?</label>
+                    <select id="reportReason" required>
+                        <option value="">Select a reason...</option>
+                        <option value="inappropriate">Inappropriate Content</option>
+                        <option value="spam">Spam</option>
+                        <option value="harassment">Harassment/Bullying</option>
+                        <option value="violence">Violence/Gore</option>
+                        <option value="misleading">Misleading Information</option>
+                        <option value="copyright">Copyright Infringement</option>
+                        <option value="hate_speech">Hate Speech</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reportDescription">Additional Details (optional)</label>
+                    <textarea id="reportDescription" rows="3" placeholder="Tell us more about why you're reporting this..."></textarea>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="reportAnonymous">
+                        <label for="reportAnonymous">Report Anonymously</label>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">Submit Report</button>
+                <button type="button" class="btn-secondary" onclick="document.getElementById('reportModal').classList.remove('show')">Cancel</button>
+            </form>
+            <div id="reportSuccessMessage" style="display: none;">
+                <i class="fas fa-check-circle"></i>
+                <p>Thank you for reporting. Our team will review this content.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>

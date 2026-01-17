@@ -239,11 +239,8 @@ async function loadVideos() {
     try {
         console.log('🎬 Loading videos from Firestore in real-time...');
         
-        // Import necessary Firestore functions
-        const { collection, query, orderBy, onSnapshot } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js");
-        
         // Set up real-time listener for videos ordered by newest first
-        const videosQuery = query(collection(db, 'videos'), orderBy('timestamp', 'desc'), limit(50));
+        const videosQuery = query(collection(db, 'videos'), orderBy('createdAt', 'desc'), limit(50));
         
         onSnapshot(videosQuery, (snapshot) => {
             appState.videos = [];
@@ -265,10 +262,12 @@ async function loadVideos() {
         }, (error) => {
             console.error('❌ Error loading videos:', error);
             appState.videos = [];
+            showToast('Error loading videos: ' + error.message, 'error');
         });
     } catch (error) {
         console.error('❌ Error setting up videos listener:', error);
         appState.videos = [];
+        showToast('Error setting up videos: ' + error.message, 'error');
     }
 }
 
