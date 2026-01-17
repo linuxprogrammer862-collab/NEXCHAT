@@ -1,7 +1,7 @@
 // app.js - Main Application Logic
 import { auth, db, storage } from './firebase-config.js';
-import { collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import './auth.js';
+import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, limit } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { handleLogin, handleSignup, handleLogout } from './auth.js';
 import './videos.js';
 import './ui.js';
 import './interactions.js';
@@ -55,6 +55,12 @@ function initializeApp() {
 }
 
 function checkAuthState() {
+    // Check if user is logged in
+    const userToken = localStorage.getItem('userToken');
+    if (userToken) {
+        appState.currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    }
+}
 
 function showLoadingSpinner(containerId) {
     const container = document.getElementById(containerId);
@@ -229,59 +235,41 @@ function switchAuthTab(tab) {
     document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
 }
 
-function loadVideos() {
-        {
-            id: '1',
-            title: 'Amazing Dance Moves',
-            description: 'Check out these incredible dance moves!',
-            author: 'DancerJohn',
-            authorId: 'user1',
-            url: 'https://www.w3schools.com/html/mov_bbb.mp4',
-            thumbnail: 'https://via.placeholder.com/300x500?text=Dance',
-            duration: 45,
-            likes: 2345,
-            comments: 567,
-            shares: 234,
-            category: 'dance',
-            timestamp: new Date(),
-            liked: false,
-            bookmarked: false
-        },
-        {
-            id: '2',
-            title: 'Comedy Skit',
-            description: 'Funny moments',
-            author: 'ComedyKing',
-            authorId: 'user2',
-            url: 'https://www.w3schools.com/html/mov_bbb.mp4',
-            thumbnail: 'https://via.placeholder.com/300x500?text=Comedy',
-            duration: 60,
-            likes: 3456,
-            comments: 890,
-            shares: 345,
-            category: 'comedy',
-            timestamp: new Date(),
-            liked: false,
-            bookmarked: false
-        },
-        {
-            id: '3',
-            title: 'Music Production',
-            description: 'Behind the scenes of music making',
-            author: 'ProducerMike',
-            authorId: 'user3',
-            url: 'https://www.w3schools.com/html/mov_bbb.mp4',
-            thumbnail: 'https://via.placeholder.com/300x500?text=Music',
-            duration: 90,
-            likes: 4567,
-            comments: 1234,
-            shares: 567,
-            category: 'music',
-            timestamp: new Date(),
-            liked: false,
-            bookmarked: false
-        }
-    ];
+async function loadVideos() {
+    try {
+        console.log('🎬 Loading videos from Firestore in real-time...');
+        
+        // Import necessary Firestore functions
+        const { collection, query, orderBy, onSnapshot } = await import("https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js");
+        
+        // Set up real-time listener for videos ordered by newest first
+        const videosQuery = query(collection(db, 'videos'), orderBy('timestamp', 'desc'), limit(50));
+        
+        onSnapshot(videosQuery, (snapshot) => {
+            appState.videos = [];
+            snapshot.forEach(doc => {
+                const video = { id: doc.id, ...doc.data() };
+                appState.videos.push(video);
+            });
+            
+            console.log('✅ Videos loaded in real-time:', appState.videos.length);
+            
+            // Reload the current feed with new videos
+            if (appState.currentPage === 'home') {
+                loadHomeVideos();
+            } else if (appState.currentPage === 'following') {
+                loadFollowingVideos();
+            } else if (appState.currentPage === 'explore') {
+                loadExploreVideos();
+            }
+        }, (error) => {
+            console.error('❌ Error loading videos:', error);
+            appState.videos = [];
+        });
+    } catch (error) {
+        console.error('❌ Error setting up videos listener:', error);
+        appState.videos = [];
+    }
 }
 
 function loadHomeVideos() {
@@ -915,6 +903,14 @@ async function handleReport(e) {
         console.error('Error submitting report:', error);
         showToast('Error submitting report: ' + error.message, 'error');
     }
+}
+
+// Initialize app when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeApp);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    initializeApp();
 }
 
 // Exports for other modules
